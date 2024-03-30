@@ -1,0 +1,15 @@
+<!doctype html>
+<title>Welcome to the Kib Kot!</title>
+<h1>Past feedings</h1>
+<li>
+{% for i in feedings %}
+<ul>
+    {{ i }}
+</ul>
+{% endfor %}
+</li>
+<h1>Feed a cat</h1>
+
+<a href="/kib/{{ date }}">FEEEED MEEEE!</a>
+
+<p>Or use the camera interface! ;-)</p>
