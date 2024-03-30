@@ -10,8 +10,7 @@ app = Flask(__name__)
 
 # Set a common limiter for all IP addresses, normally the limiter is separate
 # for each one.
-limiter = Limiter(lambda: "127.0.0.1",
-                  app=app)
+limiter = Limiter(lambda: "127.0.0.1", app=app)
 
 # Make it so GPIO pins by their system number, not their position. The two sets
 # of numbers are listed on a GPIO pinout.
@@ -28,6 +27,7 @@ m1f = GPIO.PWM(M1_F, 1000)
 # Set pin 16 as input, for detecting the switch
 GPIO.setup(16, GPIO.IN)
 
+
 @app.route("/")
 def main_page():
     if os.path.isfile("./log.csv"):
@@ -39,6 +39,7 @@ def main_page():
         feedings = ["No feedings yet!"]
     date = datetime.now().strftime("%Y%m%d%H%M")
     return render_template("main_page.html", feedings=feedings, date=date)
+
 
 # To make things a bit trickier, I put the address at the current yyyymmdd
 # date. I also add a limiter of 5 minutes. It takes a cat about 3 minutes to
@@ -80,7 +81,7 @@ def kib(today):
             # set rising to True
             elif new_switch < old_switch:
                 rising = False
-        # We've passed the rising edge and it has 
+        # We've passed the rising edge and it has
         # stayed there for 100 cycles, terminate
         # the while loop.
         if rising and consecutive > 100:
@@ -98,5 +99,5 @@ def kib(today):
     # Save this in our logs
     with open("./log.csv", "a") as f:
         f.write(f"{datetime.now().isoformat()},{request.remote_addr},success\n")
-    
+
     return "Successful kib!", 200
