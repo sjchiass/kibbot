@@ -52,10 +52,29 @@ flask --app kibbot run --host=0.0.0.0
 To run using a better server, install gunicorn with `pip install gunicorn`, then use
 
 ```
-gunicorn -w 1 "kibbot:app"
+gunicorn -w 1 -b 0.0.0.0:5000 kibbot:app
 ```
 
 Make sure to only use one worker so that there are not multiple requests at once to the dispenser. **Test whether flask-limiter works with multiple workers**
+
+### A systemd service
+
+Place in `~/.config/systemd/user/kibbot.service`
+
+```
+[Unit]
+Description=Kib Bot food dispenser
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/kibbot
+ExecStart=/home/ubuntu/kibbot/.venv/bin/gunicorn -b 0.0.0.0:5000 -w 1 kibbot:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Deep dive
 
