@@ -59,7 +59,9 @@ Make sure to only use one worker so that there are not multiple requests at once
 
 ### A systemd service
 
-Place in `~/.config/systemd/user/kibbot.service`
+You can find a good guide [here](https://github.com/torfsen/python-systemd-tutorial) for turning a Python script into a systemd service.
+
+Place the following in `~/.config/systemd/USER/kibbot.service`
 
 ```
 [Unit]
@@ -67,13 +69,26 @@ Description=Kib Bot food dispenser
 After=network.target
 
 [Service]
-User=ubuntu
 WorkingDirectory=/home/ubuntu/kibbot
 ExecStart=/home/ubuntu/kibbot/.venv/bin/gunicorn -b 0.0.0.0:5000 -w 1 kibbot:app
-Restart=always
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
+```
+
+Then run to start
+
+```
+systemctl --user enable kibbot
+systemctl --user start kibbot
+```
+
+You should also run this to let the service continue even when you aren't logged in
+
+```
+sudo loginctl enable-linger $USER
 ```
 
 ## Deep dive
