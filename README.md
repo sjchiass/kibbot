@@ -101,7 +101,9 @@ The feeder has a screen and some buttons for either automatically feeding portio
 
 The feeder has a small coin cell battery to keep the time when powered off. It is also possible to power the machine with three D batteries, like a battery backup.
 
-The feeder is fed by a small %V 1A charger. This is also the voltage the motor runs at. The switch is 3V, so the logic is thereabouts 3.3V. This is worth remembering when playing around with the circuitry.
+The feeder is fed by a small 5V 1A charger. This is also the voltage the motor runs at. The switch is 3V, so the logic is thereabouts 3.3V. This is worth remembering when playing around with the circuitry.
+
+[To check all of these, connect your multimeter's negative terminal to the feeder's ground. Then connect the positive terminal to the parts you want to measure. Alligator clips or "EZ" clips make this a lot easier.]
 
 ### Strategy
 
@@ -117,6 +119,43 @@ I use the motor pi hat to control the motor from the Pi. The hat is simply a mot
 
 La piece de resistance is my dupont connector kit and crimper. This has made everything very easy. With the kit, I was simply able to cut the feeder's wires, put dupont connectors on their ends, and plug them wherever I needed. I use both male and female connectors. Male connectors will fit in breadboards and screw terminals, and female connectors are needed for the Pi. It's a good idea to have an assortment of pre-made Dupont connectors, male-male, male-female, female-female, in case you need to extend a connection or change its connector.
 
-Last but not least, it's a really good idea to have a muiltimeter so that you can check your feeder's circuitry. This is my first hardware hack, and it's a pretty basic one; nevertheless, I think it's a good idea to check and write yourself some notes on paper. The manufacturer may designed things in a way you do not expect.
+Last but not least, it's a really good idea to have a multimeter so that you can check your feeder's circuitry. This is my first hardware hack, and it's a pretty basic one; nevertheless, I think it's a good idea to check and write yourself some notes on paper. The manufacturer may designed things in a way you do not expect. Different connectors for your multimeter are helpful: alligator clips and "EZ" clips should be able to latch onto most things.
 
 Anoter helpful thing to have is a camera so that you can take photos of the feeder's assembly, in case you forget how to put it all back together.
+
+### Taking it apart
+
+Most pieces of the feeder come apart easily.
+
+Separating the motor's drum structure was harder. At first I thought it was held by plastic clips, but no mater how hard I tried, I could not pry it loose. I then wondered if the things were held by screws after all. It turned out they were hidden under the feeder's rubber pad or feet. By ripping these off I was able to remove four screws and the feeder came apart.
+
+Inside, wires are soldered to terminals, and there is what looks like a JST header hot-glued to the main board.
+
+There is a white wire heading from the 3 D batteries to the board.
+
+There are pairs of wires each going to the motor and to the lever switch. The motor's rotating structure has corners that press on the switch three times during each complete revolution.
+
+To take this apart, I simply cut all the wires at about midpoint. This left me with
+
+  * a disconnected main board.
+  * VCC and ground
+  * positive and negative for the motor
+  * ground for the switch and a blue wire for the returning signal
+
+I terminated all the wire ends with Dupont connectors. It didn't really matter whether they were male or female connectors. I have plenty of either kind to connect them.
+
+### Putting together the new board
+
+Putting together the new Raspberry Pi setup is not hard provided you have the parts. We just need to control the motor and read the switch to determine the motor's position.
+
+Before that we need to power things. The power supply can be connected to the Pi's 5V and ground pins. On the Pi Zero, these pins are connected to the Pi's power rails, so they're okay to use this way. If this isn't to your liking, I see two alternatives: first, run a 5V power supply with the right connector for your Pi through the back of the feeder, or second wire your own power connector to the VCC and GND in the feeder. You can find USB breakboard boards for micro USB and USB-C to make your life easier.
+
+The motor can be connected to a Motor Pi Hat. Put the hat on the Pi, secure the motor's wires into the screw terminal, and feed 5V into the controller's external voltage.
+
+The switch in the feeder drives its output low, so you will need drive your Pi's digital input pin high to 3.3V volt with a pull-up resistor (I use 4.7kohm). What this all means is that when the switch is not pressed, your Pi will read ON or HIGH at 3.3V. When the switch is pressed, its connection to ground will drive your input pin to ground along with it: this is thanks to the pull-up resistor that will "weaken" the 3.3V so that the ground signal can easily overwhelm it.
+
+There is an extra wrinkle though: the switch will be noisy, meaning that it will bounce around HIGH and LOW as it switches (or just when it feels like it). This means that it will be hard to detect what the switch is really doing. The noise can be reduced with a 104 ceramic capacitor accross the the input pin and the ground (one leg of the capacitor on the digital pin, the other leg on the ground). The capacitor will even out the power fluctuations. Still, it's worth making your Python code wait a few cycles to make sure a change between HIGH/LOW is genuine.
+
+(I have never been good at diagnosing these noise issues in the past. To do a better job I would need an oscilloscope to measure the fluctuations' frequencies. That would let me select the right capacitor to filter. A multimeter does not update nearly fast enough to get the shape of the noise from the switch.)
+
+### The code
