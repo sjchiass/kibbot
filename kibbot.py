@@ -45,7 +45,7 @@ def main_page():
 # date. I also add a limiter of 5 minutes. It takes a cat about 3 minutes to
 # eat a serving.
 @app.route("/kib/<int:today>")
-@limiter.limit("1 per 5 minute")
+#@limiter.limit("1 per 5 minute")
 def kib(today):
     if today != int(datetime.now().strftime("%Y%m%d%H%M")):
 
