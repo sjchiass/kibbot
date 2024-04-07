@@ -12,21 +12,6 @@ app = Flask(__name__)
 # for each one.
 limiter = Limiter(lambda: "127.0.0.1", app=app)
 
-# Make it so GPIO pins by their system number, not their position. The two sets
-# of numbers are listed on a GPIO pinout.
-GPIO.setmode(GPIO.BCM)
-
-# For the motor hat, the BCM pin 17 is the one for moving forward the first
-# motor.
-M1_F = 17
-
-# Initialize pin 17 as output and then set it for PWN at 1000Hz.
-GPIO.setup(M1_F, GPIO.OUT)
-m1f = GPIO.PWM(M1_F, 1000)
-
-# Set pin 16 as input, for detecting the switch
-GPIO.setup(16, GPIO.IN)
-
 
 @app.route("/")
 def main_page():
@@ -59,6 +44,21 @@ def kib(today):
     old_switch = GPIO.input(16)
     consecutive = 0
     rising = None
+
+    # Make it so GPIO pins by their system number, not their position. The two sets
+    # of numbers are listed on a GPIO pinout.
+    GPIO.setmode(GPIO.BCM)
+
+    # For the motor hat, the BCM pin 17 is the one for moving forward the first
+    # motor.
+    M1_F = 17
+
+    # Initialize pin 17 as output and then set it for PWN at 1000Hz.
+    GPIO.setup(M1_F, GPIO.OUT)
+    m1f = GPIO.PWM(M1_F, 1000)
+
+    # Set pin 16 as input, for detecting the switch
+    GPIO.setup(16, GPIO.IN)
 
     # Start the motor at 80% load. It will keep running until stopped.
     m1f.start(80)
