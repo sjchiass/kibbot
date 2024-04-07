@@ -1,17 +1,10 @@
 import os.path
 from datetime import datetime
 from flask import Flask, render_template, request
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 import RPi.GPIO as GPIO
 
 
 app = Flask(__name__)
-
-# Set a common limiter for all IP addresses, normally the limiter is separate
-# for each one.
-limiter = Limiter(lambda: "127.0.0.1", app=app)
-
 
 @app.route("/")
 def main_page():
@@ -27,10 +20,8 @@ def main_page():
 
 
 # To make things a bit trickier, I put the address at the current yyyymmdd
-# date. I also add a limiter of 5 minutes. It takes a cat about 3 minutes to
-# eat a serving.
+# date.
 @app.route("/kib/<int:today>")
-# @limiter.limit("1 per 5 minute")
 def kib(today):
     if today != int(datetime.now().strftime("%Y%m%d%H%M")):
 
