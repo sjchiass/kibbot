@@ -30,7 +30,7 @@ def main_page():
 # date. I also add a limiter of 5 minutes. It takes a cat about 3 minutes to
 # eat a serving.
 @app.route("/kib/<int:today>")
-#@limiter.limit("1 per 5 minute")
+# @limiter.limit("1 per 5 minute")
 def kib(today):
     if today != int(datetime.now().strftime("%Y%m%d%H%M")):
 
@@ -39,11 +39,6 @@ def kib(today):
             f.write(f"{datetime.now().isoformat()}, {request.remote_addr}, fail\n")
 
         return "Invalid kibble request", 400
-    # Create some variables for tracking the switch in the while loop. When the
-    # switch is let go, the voltage rises and `rising` becomes True.
-    old_switch = GPIO.input(16)
-    consecutive = 0
-    rising = None
 
     # Make it so GPIO pins by their system number, not their position. The two sets
     # of numbers are listed on a GPIO pinout.
@@ -59,6 +54,12 @@ def kib(today):
 
     # Set pin 16 as input, for detecting the switch
     GPIO.setup(16, GPIO.IN)
+
+    # Create some variables for tracking the switch in the while loop. When the
+    # switch is let go, the voltage rises and `rising` becomes True.
+    old_switch = GPIO.input(16)
+    consecutive = 0
+    rising = None
 
     # Start the motor at 80% load. It will keep running until stopped.
     m1f.start(80)
