@@ -1,4 +1,3 @@
 flask
-Flask-Limiter
 RPi.GPIO
 gunicorn
