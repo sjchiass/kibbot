@@ -46,16 +46,18 @@ pip install -r requirements.txt
 In order to start the web server in development mode,
 
 ```
+. .venv/bin/activate
 flask --app kibbot run --host=0.0.0.0
 ```
 
 To run using a better server, install gunicorn with `pip install gunicorn`, then use
 
 ```
+. .venv/bin/activate
 gunicorn -w 1 -b 0.0.0.0:5000 kibbot:app
 ```
 
-Make sure to only use one worker so that there are not multiple requests at once to the dispenser. **Test whether flask-limiter works with multiple workers**
+Make sure to only use one worker so that there are not multiple requests at once to the dispenser. With only one worker, requests will happen in sequence, and the motor will keep running until it has completed them all.
 
 ### A systemd service
 
@@ -105,7 +107,7 @@ The feeder is fed by a small 5V 1A charger. This is also the voltage the motor r
 
 [To check all of these, connect your multimeter's negative terminal to the feeder's ground. Then connect the positive terminal to the parts you want to measure. Alligator clips or "EZ" clips make this a lot easier.]
 
-### Strategy
+### Hardware strategy
 
 A Raspberry Pi computer with a motor controller is ultimately equivalent to the feeder's electronics. It accepts 5V as its power input so it can drive the motor at that voltage. Its logic is at 3.3V so it's able to read the switch the same way.
 
@@ -158,4 +160,5 @@ There is an extra wrinkle though: the switch will be noisy, meaning that it will
 
 (I have never been good at diagnosing these noise issues in the past. To do a better job I would need an oscilloscope to measure the fluctuations' frequencies. That would let me select the right capacitor to filter. A multimeter does not update nearly fast enough to get the shape of the noise from the switch.)
 
-### The code
+### Software strategy
+
