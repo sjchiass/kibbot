@@ -6,6 +6,7 @@ import RPi.GPIO as GPIO
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def main_page():
     if os.path.isfile("./log.csv"):
@@ -20,10 +21,13 @@ def main_page():
 
 
 # To make things a bit trickier, I put the address at the current yyyymmdd
-# date.
+# date. This means that links expires after a short time. I hope this prevents
+# misclicks on phones.
 @app.route("/kib/<int:today>")
 def kib(today):
-    if today != int(datetime.now().strftime("%Y%m%d%H%M")):
+    # Link expires after about a minute, ie: link must be within one
+    # minute of current kibbot time
+    if abs(today - int(datetime.now().strftime("%Y%m%d%H%M"))) > 1:
 
         # Save this in our logs
         with open("./log.csv", "a") as f:
