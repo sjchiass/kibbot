@@ -59,40 +59,6 @@ gunicorn -w 1 -b 0.0.0.0:5000 kibbot:app
 
 Make sure to only use one worker so that there are not multiple requests at once to the dispenser. With only one worker, requests will happen in sequence, and the motor will keep running until it has completed them all.
 
-### A systemd service
-
-You can find a good guide [here](https://github.com/torfsen/python-systemd-tutorial) for turning a Python script into a systemd service.
-
-Place the following in `~/.config/systemd/USER/kibbot.service`
-
-```
-[Unit]
-Description=Kib Bot food dispenser
-After=network.target
-
-[Service]
-WorkingDirectory=/home/ubuntu/kibbot
-ExecStart=/home/ubuntu/kibbot/.venv/bin/gunicorn -b 0.0.0.0:5000 -w 1 kibbot:app
-Environment=PYTHONUNBUFFERED=1
-Restart=on-failure
-
-[Install]
-WantedBy=default.target
-```
-
-Then run to start
-
-```
-systemctl --user enable kibbot
-systemctl --user start kibbot
-```
-
-You should also run this to let the service continue even when you aren't logged in
-
-```
-sudo loginctl enable-linger $USER
-```
-
 ## Deep dive
 
 ### How the automatic feeder works
@@ -162,3 +128,60 @@ There is an extra wrinkle though: the switch will be noisy, meaning that it will
 
 ### Software strategy
 
+To control the Kibbot I use a very simple Flask server. This puts the the Kibbot on the LAN, and if you have a VPN configured, it also opens up remote control.
+
+Flask is a simple web server. When a visitor requests a URL, the server runs the appropriate Python code. If the user requests a URL or path that does not exist, the server returns an error. So Flask creates a website with some Python code living inside.
+
+The Kibbot simply needs to have a page with a link to dispense food. When the visitor clicks the link, the bot dispenses one portion of food. On the server, Python accesses the Raspberry Pi's GPIO pins. These pins are connected to the motor and the switch, so Python can drive the motor and stop it when necessary.
+
+Controlling the motor is not difficult, thanks to the Motor Pi Hat. The board's GitHub repo has [an example](https://github.com/modmypi/SN754410NE-Motor-Controller/blob/master/pwm_motor.py) you can quickly adapt and use. The RPi.GPIO library already has all it needs, and no additional libraries are necessary. Once the pins are assigned, the code can set the motor's speed. When it's time to stop, the `.stop()` method is called.
+
+Reading the switch is not difficult, but making use of the signal requires a bit of work.
+
+First, we're interested in the rising edge of the switch's signal, meaning that we want to know when the switch goes from LOW (presses) to HIGH (unpressed). (Recall that the switch is connected to ground so that it drives the input pin low when pressed.) To do this, we need a while loop that compares the signal from the previous loop.
+
+Second, the signal is noisy despite the capacitor. It will bounce between HIGH and LOW as the switch is pressed. While it might be possible to clean up the signal more with better tools, there is a cheap solution. The code can wait to see if the signal stays high after it detects the rising edge. This introduces a delay but it's fairly reliable.
+
+With these two things together, the operation of the motor and the switch to stop it, the web server can dispense portions of food when the link is clicked.
+
+There are two other things to do: include a log and protect against accidental feedings.
+
+A log is easily made by saving the time of each request to a file. When the page is displayed, the file is read to give the past history. This way you have some idea how often you are feeding your cats.
+
+Protecting against accidental feedings can be done a few ways. One way is to make the links expire after a short amount of time. In our case, we can just put a timestamp at the end of each link and check that the timestamp is recent when evaluating the request. If a request uses a timestamp that is too old, the request fails. Another way is to use the `flask-limiter` library to limit how many times a route can be used.
+
+### A systemd service
+
+It is very convenient to have the Flask server start automatically whenever the Kibbot is pluged in. This can be done with a systemd service that starts the server as Linux starts. This means you don't have to SSH into the Kibbot each time you want to start it.
+
+You can find a good guide [here](https://github.com/torfsen/python-systemd-tutorial) for turning a Python script into a systemd service.
+
+Place the following in `~/.config/systemd/USER/kibbot.service`
+
+```
+[Unit]
+Description=Kib Bot food dispenser
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ubuntu/kibbot
+ExecStart=/home/ubuntu/kibbot/.venv/bin/gunicorn -b 0.0.0.0:5000 -w 1 kibbot:app
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+```
+
+Then run to start
+
+```
+systemctl --user enable kibbot
+systemctl --user start kibbot
+```
+
+You should also run this to let the service continue even when you aren't logged in
+
+```
+sudo loginctl enable-linger $USER
+```
