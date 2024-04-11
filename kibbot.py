@@ -80,7 +80,7 @@ def kib(today):
         # We've passed the falling edge and it has
         # stayed there for 100 cycles, terminate
         # the while loop.
-        if falling and consecutive > 100:
+        if falling and consecutive > 1000:
             break
         # Otherwise, save the switch value and
         # continue the loop.
