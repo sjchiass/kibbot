@@ -51,10 +51,10 @@ def kib(today):
     GPIO.setup(16, GPIO.IN)
 
     # Create some variables for tracking the switch in the while loop. When the
-    # switch is let go, the voltage rises and `rising` becomes True.
+    # switch is pressed, the voltage drops and `falling` becomes True.
     old_switch = GPIO.input(16)
     consecutive = 0
-    rising = None
+    falling = None
 
     # Start the motor at 80% load. It will keep running until stopped.
     m1f.start(80)
@@ -69,18 +69,18 @@ def kib(today):
         # Otherwise start counting again
         else:
             consecutive = 0
+            # If the signal goes from HIGH to LOW,
+            # set falling to True
+            if new_switch < old_switch:
+                falling = True
             # If the signal goes from LOW to HIGH,
-            # set rising to True
-            if new_switch > old_switch:
-                rising = True
-            # If the signal goes from LOW to HIGH,
-            # set rising to True
-            elif new_switch < old_switch:
-                rising = False
-        # We've passed the rising edge and it has
+            # set falling to False
+            elif new_switch > old_switch:
+                falling = False
+        # We've passed the falling edge and it has
         # stayed there for 100 cycles, terminate
         # the while loop.
-        if rising and consecutive > 100:
+        if falling and consecutive > 100:
             break
         # Otherwise, save the switch value and
         # continue the loop.
