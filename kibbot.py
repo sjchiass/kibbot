@@ -27,7 +27,7 @@ def main_page():
 def kib(today):
     # Link expires after about a minute, ie: link must be within one
     # minute of current kibbot time
-    if (int(datetime.now()) - datetime.fromisoformat(today)) / timedelta(minutes=1) > 1:
+    if (datetime.now() - datetime.fromisoformat(today)) / timedelta(minutes=1) > 1:
 
         # Save this in our logs
         with open("./log.csv", "a") as f:
