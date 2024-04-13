@@ -16,7 +16,7 @@ def main_page():
             feedings = sorted(feedings)
     else:
         feedings = ["No feedings yet!"]
-    date = datetime.now().strftime("%Y%m%d%TH%M%S")
+    date = datetime.now().strftime("%Y%m%dT%H%M%S")
     return render_template("main_page.html", feedings=feedings, date=date)
 
 
