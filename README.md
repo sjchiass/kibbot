@@ -2,7 +2,7 @@
 
 ## Your cats' best friend
 
-The Kib Bot is a Raspberry Pi integrated into a pet food dispenser. It lets you operate the feeder remotely. It can be modified to perform other functions, like logging and authentication.
+The Kib Bot is a Raspberry Pi integrated into a pet food dispenser. It lets you operate the feeder remotely. It can be modified to perform other functions, like logging and protecting against misclicks.
 
 ![Inside of food dispenser](./images/inside_pi.jpg)
 
@@ -14,9 +14,9 @@ Connect the Kib Bot to your VPN and operate it away from home! Your cats will lo
 
 This code will run off of a Raspberry Pi single-board computer that is able to run Flask. It also requires some kind of pet food dispenser, one that you've modified to connect to the Raspberry Pi.
 
-The code uses RPi.GPIO through a motor controller. It could be run on a different machine as long as it's able to control a motor.
+The code uses RPi.GPIO through a motor controller. It could be run on a different machine as long as it's able to control a motor and connect to the internet.
 
-The code also needs to be able to read a pin, assuming your food dispenser uses a switch to detect the motor's position.
+The code also needs to be able to read a pin, assuming your food dispenser uses a switch to detect the motor's position. Any Raspberry Pi or microcontroller can do this.
 
 ### Installation
 
@@ -77,21 +77,23 @@ The feeder has a screen and some buttons for either automatically feeding portio
 
 The feeder has a small coin cell battery to keep the time when powered off. It is also possible to power the machine with three D batteries, like a battery backup.
 
-The feeder is fed by a small 5V 1A charger. This is also the voltage the motor runs at. The switch is 3V, so the logic is thereabouts 3.3V. This is worth remembering when playing around with the circuitry.
+The feeder is fed by a small 5V 1A charger. The drum motor also runs at 5V. The switch is 3V, so the logic is thereabouts 3.3V. This is worth remembering when playing around with the circuitry.
 
 [To check all of these, connect your multimeter's negative terminal to the feeder's ground. Then connect the positive terminal to the parts you want to measure. Alligator clips or "EZ" clips make this a lot easier.]
 
 ### Hardware strategy
 
-A Raspberry Pi computer with a motor controller is ultimately equivalent to the feeder's electronics. It accepts 5V as its power input so it can drive the motor at that voltage. Its logic is at 3.3V so it's able to read the switch the same way.
+A Raspberry Pi computer with a motor controller is ultimately equivalent to the feeder's electronics. It accepts 5V as its power input so it can drive the motor at that voltage through the motor controller. Its logic is at 3.3V so it's able to read the switch the same way.
 
 The Pi has the advantage of being a computer able to run Python and a web server. It can also connect to the internet by wifi. Other add-ons are possible, like a camera, a speaker and a sensor for detecting pellet levels in the reservoir.
 
 ### Tools and hardware
 
-I used a Raspberry Pi Zero 2 W, which is the cheapest in-stock board I could find. A Pico W would also work, but it's just so much easier (and fun) to use a full Linux machine.
+I used a [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/), which is the cheapest in-stock board I could find. A Pico W would also work, but it's just so much easier (and fun) to use a full Linux machine.
 
-I use the motor pi hat to control the motor from the Pi. The hat is simply a motor control chip that connect to some of the Pi's pins. Any other motor controller should work. Only one channel is neeeded. The ability to supply a separate 5V voltage is necessary since the motor runs at 5V not the 3.3V of the Pi's GPIO.
+Note: the Raspberry Pi Zero product line does not have a protective fuse, so make sure to give it 5V only. I have fried a Pi Zero by using a fast-charging phone charger, the kind that can go to 12V. I am not sure why the fast-charge mode activated, so I have stuck to regular 5V chargers since.
+
+I use the [Pi Motor Controller HAT](https://www.pishop.ca/product/raspberry-pi-motor-controller-hat/) to control the motor from the Pi. The hat is simply a motor control chip that connect to some of the Pi's pins. Any other motor controller should work. Only one channel is neeeded. The ability to supply a separate 5V voltage is necessary since the motor runs at 5V not the 3.3V of the Pi's GPIO.
 
 ![Photo of motor pi and Pi Zero 2W](./images/motor_and_pi.jpg)
 
@@ -136,11 +138,11 @@ The motor can be connected to a Motor Pi Hat. Put the hat on the Pi, secure the 
 
 ![Photo and diagram of switch connection to the Pi](./images/switch_circuit.png)
 
-The switch in the feeder drives its output low, so you will need drive your Pi's digital input pin high to 3.3V volt with a pull-up resistor (I use 4.7kohm). What this all means is that when the switch is not pressed, your Pi will read ON or HIGH at 3.3V. When the switch is pressed, its connection to ground will drive your input pin to ground along with it: this is thanks to the pull-up resistor that will "weaken" the 3.3V so that the ground signal can easily overwhelm it.
+The switch in the feeder drives its output to ground when pressed, so you will need to drive your Pi's digital input pin high to 3.3V volt with a pull-up resistor (I use 4.7kohm). What this all means is that when the switch is not pressed, your Pi will read ON or HIGH at 3.3V. When the switch is pressed, its connection to ground will drive your input pin to ground along with it: this is thanks to the pull-up resistor that will "weaken" the 3.3V so that the ground signal can easily overwhelm it.
 
 There is an extra wrinkle though: the switch will be noisy, meaning that it will bounce around HIGH and LOW as it switches (or just when it feels like it). This means that it will be hard to detect what the switch is really doing. The noise can be reduced with a 104 ceramic capacitor accross the the input pin and the ground (one leg of the capacitor on the digital pin, the other leg on the ground). The capacitor will even out the power fluctuations. Still, it's worth making your Python code wait a few cycles to make sure a change between HIGH/LOW is genuine.
 
-(I have never been good at diagnosing these noise issues in the past. To do a better job I would need an oscilloscope to measure the fluctuations' frequencies. That would let me select the right capacitor to filter. A multimeter does not update nearly fast enough to get the shape of the noise from the switch.)
+(I have never been good at diagnosing these noise issues in the past. To do a better job I would need an oscilloscope to measure the fluctuations' frequencies. That would let me select the right capacitor to filter. A multimeter does not update nearly fast enough to get the shape of the noise from the switch. Oscilloscopes takes measurements more than a million times per second and graph them for you.)
 
 ### Software strategy
 
@@ -152,19 +154,105 @@ The Kibbot simply needs to have a page with a link to dispense food. When the vi
 
 Controlling the motor is not difficult, thanks to the Motor Pi Hat. The board's GitHub repo has [an example](https://github.com/modmypi/SN754410NE-Motor-Controller/blob/master/pwm_motor.py) you can quickly adapt and use. The RPi.GPIO library already has all it needs, and no additional libraries are necessary. Once the pins are assigned, the code can set the motor's speed. When it's time to stop, the `.stop()` method is called.
 
+```python
+# Make it so GPIO pins by their system number, not their position. The two sets
+# of numbers are listed on a GPIO pinout.
+GPIO.setmode(GPIO.BCM)
+
+# For the motor hat, the BCM pin 17 is the one for moving forward the first
+# motor.
+M1_F = 17
+
+# Initialize pin 17 as output and then set it for PWN at 1000Hz.
+GPIO.setup(M1_F, GPIO.OUT)
+m1f = GPIO.PWM(M1_F, 1000)
+
+# Start the motor at 80% load. It will keep running until stopped.
+m1f.start(80)
+
+# Stop the motor
+m1f.stop()
+```
+
 Reading the switch is not difficult, but making use of the signal requires a bit of work.
 
-First, we're interested in the rising edge of the switch's signal, meaning that we want to know when the switch goes from LOW (presses) to HIGH (unpressed). (Recall that the switch is connected to ground so that it drives the input pin low when pressed.) To do this, we need a while loop that compares the signal from the previous loop.
+First, we're interested in the falling edge of the switch's signal, meaning that we want to know when the switch goes from HIGH (unpressed) to LOW (pressed). (Recall that the switch is connected to ground so that it drives the input pin low when pressed.) To do this, we need a while loop that compares the signal from the previous loop.
+
+```python
+# Create some variables for tracking the switch in the while loop. When the
+# switch is pressed, the voltage drops and `falling` becomes True.
+old_switch = GPIO.input(16)
+consecutive = 0
+falling = None
+
+while True:
+  # Read the signal from the switch
+  new_switch = GPIO.input(16)
+
+  # If the signal goes from HIGH to LOW,
+  # set falling to True
+  if new_switch < old_switch:
+    falling = True
+  # If the signal goes from LOW to HIGH,
+  # set falling to False
+  elif new_switch > old_switch:
+    falling = False
+
+  old_switch = new_switch
+```
 
 Second, the signal is noisy despite the capacitor. It will bounce between HIGH and LOW as the switch is pressed. While it might be possible to clean up the signal more with better tools, there is a cheap solution. The code can wait to see if the signal stays high after it detects the rising edge. This introduces a delay but it's fairly reliable.
+
+```python
+while True:
+  # [...]
+
+  # If the signal is the same as before,
+  # increment this counter
+  if new_switch == old_switch:
+      consecutive += 1
+  # Otherwise start counting again
+  else:
+      consecutive = 0
+
+  # If we've passed the falling edge and it has
+  # stayed there for 1000 cycles, terminate
+  # the while loop.
+  if falling and consecutive > 1000:
+      break
+```
 
 With these two things together, the operation of the motor and the switch to stop it, the web server can dispense portions of food when the link is clicked.
 
 There are two other things to do: include a log and protect against accidental feedings.
 
-A log is easily made by saving the time of each request to a file. When the page is displayed, the file is read to give the past history. This way you have some idea how often you are feeding your cats.
+A log is easily made by saving the time of each request to a comma-separated values (CSV) file. This kind of file is very simple, and can be written to directly without much trouble. When the page is displayed, the file is read, parsed and sorted to give the past history. This way you have some idea how often you are feeding your cats.
 
-Protecting against accidental feedings can be done a few ways. One way is to make the links expire after a short amount of time. In our case, we can just put a timestamp at the end of each link and check that the timestamp is recent when evaluating the request. If a request uses a timestamp that is too old, the request fails. Another way is to use the `flask-limiter` library to limit how many times a route can be used.
+```python
+# During a feeding, save this in our logs
+with open("./log.csv", "a") as f:
+    f.write(f"{datetime.now().isoformat()},{request.remote_addr},success\n")
+
+# When displaying the page
+if os.path.isfile("./log.csv"):
+    with open("./log.csv", "r") as f:
+        feedings = [x for x in f.readlines() if "success" in x]
+        feedings = [x.split(",")[0] for x in feedings]
+        feedings = sorted(feedings)
+```
+
+Protecting against accidental feedings can be done a few ways. One way is to make the links expire after a short amount of time. In our case, we can just put a timestamp at the end of each link and check that the timestamp is recent when evaluating the request. If a request uses a timestamp that is too old, the request fails. The `datetime` standard library makes this easy with its time deltas, [particularly their ability to divide each other](https://docs.python.org/3/library/datetime.html#datetime.timedelta.total_seconds). By subtracting the timestamp from the current time, we get a delta we can divide by `timedelta(minutes=1)` to get the minutes elapsed. If the result is great than 1, return an error.
+
+```python
+@app.route("/kib/<int:today>")
+def kib(today):
+    # Link expires after about a minute, ie: link must be within one
+    # minute of current kibbot time
+    if (int(datetime.now()) - datetime.fromisoformat(today)) / timedelta(minutes=1) > 1:
+      return "Invalid kibble request", 400
+```
+
+Another way is to use the `flask-limiter` library to limit how many times a route can be used.
 
 ### A systemd service
 
