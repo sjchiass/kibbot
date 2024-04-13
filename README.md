@@ -22,7 +22,7 @@ The code also needs to be able to read a pin, assuming your food dispenser uses 
 
 #### Hardware
 
-I used a Yoposl automatic cat feeder I bought off of Amazon.
+I used a Yoposl automatic cat feeder I bought off of Amazon. It was a lot simpler for me to buy something off the shelf and modify it than to build it from scratch.
 
 ![Photo of the automatic feeder](./images/feeder.jpg)
 
@@ -82,6 +82,8 @@ The feeder is fed by a small 5V 1A charger. The drum motor also runs at 5V. The 
 [To check all of these, connect your multimeter's negative terminal to the feeder's ground. Then connect the positive terminal to the parts you want to measure. Alligator clips or "EZ" clips make this a lot easier.]
 
 ### Hardware strategy
+
+My strategy is to take an existing automatic feeder and replace its internals with my own electronics.
 
 A Raspberry Pi computer with a motor controller is ultimately equivalent to the feeder's electronics. It accepts 5V as its power input so it can drive the motor at that voltage through the motor controller. Its logic is at 3.3V so it's able to read the switch the same way.
 
