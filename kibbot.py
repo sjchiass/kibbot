@@ -23,11 +23,11 @@ def main_page():
 # To make things a bit trickier, I put the address at the current yyyymmdd
 # date. This means that links expires after a short time. I hope this prevents
 # misclicks on phones.
-@app.route("/kib/<int:today>")
-def kib(today):
+@app.route("/kib/<timestamp>")
+def kib(timestamp):
     # Link expires after about a minute, ie: link must be within one
     # minute of current kibbot time
-    if (datetime.now() - datetime.fromisoformat(today)) / timedelta(minutes=1) > 1:
+    if (datetime.now() - datetime.fromisoformat(timestamp)) / timedelta(minutes=1) > 1:
 
         # Save this in our logs
         with open("./log.csv", "a") as f:
