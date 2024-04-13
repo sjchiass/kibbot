@@ -289,3 +289,20 @@ You should also run this to let the service continue even when you aren't logged
 ```
 sudo loginctl enable-linger $USER
 ```
+
+### A bash script for remote trigger
+
+You can access the flask server from outside a browser. A bash script can make the GET request to trigger the feeding.
+
+```bash
+#!/bin/bash
+page=$(date +%Y%m%d%H%M%S)
+
+wget -O- http://192.168.xxx.xxx:5000/kib/${page}
+```
+
+The above script can be used in motioneye to [add an action button](https://github.com/motioneye-project/motioneye/wiki/Action-Buttons) to start a feeding. Since this technique generates the timestamp from the remote machine's time, it may be too far off from the Kibbot's and always cause a failure.
+
+## Questions? Comments?
+
+If you have any questions or comments, feel free to reach out to me.
