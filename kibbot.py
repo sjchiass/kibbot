@@ -16,18 +16,20 @@ def main_page():
             feedings = sorted(feedings)
     else:
         feedings = ["No feedings yet!"]
-    date = datetime.now().strftime("%Y%m%dT%H%M%S")
+    date = datetime.now().strftime("%Y%m%d%H%M%S")
     return render_template("main_page.html", feedings=feedings, date=date)
 
 
 # To make things a bit trickier, I put the address at the current yyyymmdd
 # date. This means that links expires after a short time. I hope this prevents
 # misclicks on phones.
-@app.route("/kib/<timestamp>")
+@app.route("/kib/<int:timestamp>")
 def kib(timestamp):
+    timestamp = str(timestamp)
+    timestamp = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
     # Link expires after about a minute, ie: link must be within one
     # minute of current kibbot time
-    if (datetime.now() - datetime.fromisoformat(timestamp)) / timedelta(minutes=1) > 1:
+    if (datetime.now() - timestamp) / timedelta(minutes=1) > 1:
 
         # Save this in our logs
         with open("./log.csv", "a") as f:
