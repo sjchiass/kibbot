@@ -1,5 +1,5 @@
 import os.path
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request
 import RPi.GPIO as GPIO
 
@@ -16,7 +16,7 @@ def main_page():
             feedings = sorted(feedings)
     else:
         feedings = ["No feedings yet!"]
-    date = datetime.now().strftime("%Y%m%d%H%M")
+    date = datetime.now().strftime("%Y%m%d%TH%M%S")
     return render_template("main_page.html", feedings=feedings, date=date)
 
 
@@ -27,7 +27,7 @@ def main_page():
 def kib(today):
     # Link expires after about a minute, ie: link must be within one
     # minute of current kibbot time
-    if abs(today - int(datetime.now().strftime("%Y%m%d%H%M"))) > 1:
+    if (int(datetime.now()) - datetime.fromisoformat(today)) / timedelta(minutes=1) > 1:
 
         # Save this in our logs
         with open("./log.csv", "a") as f:
@@ -77,8 +77,8 @@ def kib(today):
             # set falling to False
             elif new_switch > old_switch:
                 falling = False
-        # We've passed the falling edge and it has
-        # stayed there for 100 cycles, terminate
+        # If we've passed the falling edge and it has
+        # stayed there for 1000 cycles, terminate
         # the while loop.
         if falling and consecutive > 1000:
             break
