@@ -2,19 +2,21 @@
 
 ## Your cats' best friend
 
-The Kib Bot is a Raspberry Pi integrated into a pet food dispenser. It lets you operate the feeder remotely. It can be modified to perform other functions, like logging and protecting against misclicks.
+The Kib Bot is a Raspberry Pi tapped into a pet food dispenser. It lets you operate the feeder remotely. It can be modified to do custom stuff, like logging and protecting against accidental feedings.
 
 ![Inside of food dispenser](./images/inside_pi.jpg)
 
-Connect the Kib Bot to your VPN and operate it away from home! Your cats will love it!
+For extra fun, connect your Kib Bot to your VPN and use it away from home! Your cats will love it!
 
 ![Photo of two cats both trying to eat from the automatic feeder](./images/cat_crowd.jpg)
 
+... better get two ...
+
 ### Requirements
 
-This code will run off of a Raspberry Pi single-board computer that is able to run Flask. It also requires some kind of pet food dispenser, one that you've modified to connect to the Raspberry Pi.
+This code will run off of a Raspberry Pi single-board computer. You'll also need some kind of pet food dispenser, one that you've modified to connect to the Raspberry Pi.
 
-The code uses RPi.GPIO through a motor controller. It could be run on a different machine as long as it's able to control a motor and connect to the internet.
+The code uses RPi.GPIO through a motor controller. It could be run on a different machine as long as it's able to control a motor and connect to the internet. The internet connection is what really makes this fun.
 
 The code also needs to be able to read a pin, assuming your food dispenser uses a switch to detect the motor's position. Any Raspberry Pi or microcontroller can do this.
 
@@ -22,25 +24,25 @@ The code also needs to be able to read a pin, assuming your food dispenser uses 
 
 #### Hardware
 
-I used a Yoposl automatic cat feeder I bought off of Amazon. It was a lot simpler for me to buy something off the shelf and modify it than to build it from scratch.
+I used a [Yoposl automatic cat feeder](https://www.amazon.ca/Yuposl-Automatic-Cat-Feeders-Dispenser/dp/B0C2JBBQKR?th=1) I bought off of Amazon. It was a lot simpler for me to buy something off the shelf and modify it than to build it from scratch. I'm even less a mechanical engineer than I'm an electronics engineer, and I'm not even an electronics engineer!
 
 ![Photo of the automatic feeder](./images/feeder.jpg)
 
-Place the motor hat on your Raspberry Pi.
+Place the Motor HAT on your Raspberry Pi. These "hats" are made to stack one on top of the other, so they're easy to use.
 
-Connect the switch to BCM pin 16. Make sure that the switch drives the voltage low when engaged. I feed pin 16 3.3V through a 4.7k ohm resistor. Check with a multimeter what your pet feeder does. You may be able to simply tap into its wiring to get the switch signal.
+Connect the switch to BCM pin 16. Make sure that the switch drives the voltage low when engaged. I feed pin 16 3.3V through a 4.7k ohm resistor. Check with a multimeter what your pet feeder is doing. You might have to tap into its wiring differently to get the switch signal.
 
 #### Software
 
-The code is setup as a Flask server.
+The code is set up as a Flask app.
 
-On a Raspberry Pi, you will have to install some software first.
+On a Raspberry Pi, you'll have to install some software first, pip, venv and git
 
 ```
-apt install python3-pip python3-venv
+apt install python3-pip python3-venv git
 ```
 
-Then, clone this code in a folder with `git clone`. You can then setup the virtual environment and installed the required packages.
+Then, clone this code in a folder with `git clone`. You can then setup the virtual environment and installed the packages in the requirements file.
 
 ```
 cd kibbot
@@ -49,69 +51,73 @@ python3 -m venv .venv
 pip install -r requirements.txt
 ```
 
-In order to start the web server in development mode,
+To start the web server in development mode,
 
 ```
 . .venv/bin/activate
 flask --app kibbot run --host=0.0.0.0
 ```
 
-To run using a better server, install gunicorn with `pip install gunicorn`, then use
+To run using a better server, use
 
 ```
 . .venv/bin/activate
 gunicorn -w 1 -b 0.0.0.0:5000 kibbot:app
 ```
 
-Make sure to only use one worker so that there are not multiple requests at once to the dispenser. With only one worker, requests will happen in sequence, and the motor will keep running until it has completed them all.
+Just make sure to only use one worker so that there aren't multiple requests at once to the dispenser. With only one worker, requests run in sequence, and the motor will keep running until it's completed all of them.
 
 ## Deep dive
 
 ### How the automatic feeder works
 
-My automatic feeder is a motor that spins a compartmentalized drum that collects the pet food and dispenses it in portions. There are three protuding rounded corners that presses a switch, which is how the machine knows the position of the drum. One full revolution of the drum dispenses three portions.
+My automatic feeder is a motor that spins a drum that takes in kibble and dispenses it in portions. The drum has three rounded corners that press a switch, which is how the machine knows the position of the drum. One full spin of the drum gives out three portions.
 
-The feeder has a screen and some buttons for either automatically feeding portions on a schedule or for initiating manual feedings. The screen locks after a short period. I'm guessing that's to make it harder for a pet to operate the machine.
+The feeder has a screen and some buttons for either automatically feeding portions on a schedule or for doing manual feedings. The screen locks after a short period. I'm guessing that's to make it harder for an animal to operate the machine with their noses. And they will try. I've seen it. Nope. No free lunch.
 
 ![Photo of automatic feeder dispensing food, with LCD screen shown](./images/front_feeder.jpg)
 
-The feeder has a small coin cell battery to keep the time when powered off. It is also possible to power the machine with three D batteries, like a battery backup.
+The feeder has a small coin cell battery to keep the time when powered off. It's also possible to power the machine with three D batteries, as a battery backup. I never bothered because I'd have to regulate the batteries to 5V, but it's something you could definitely do with the right parts.
 
-The feeder is fed by a small 5V 1A charger. The drum motor also runs at 5V. The switch is 3V, so the logic is thereabouts 3.3V. This is worth remembering when playing around with the circuitry.
+The feeder is fed by a small 5V 1A charger. The drum motor also runs at 5V. The switch is 3V, so the logic is probably 3.3V. This is worth remembering when playing around with the circuitry.
 
 [To check all of these, connect your multimeter's negative terminal to the feeder's ground. Then connect the positive terminal to the parts you want to measure. Alligator clips or "EZ" clips make this a lot easier.]
 
 ### Hardware strategy
 
-My strategy is to take an existing automatic feeder and replace its internals with my own electronics.
+My strategy is to take an existing automatic feeder and replace its internals with my own stuff. This way most of my work is already done for me.
 
 A Raspberry Pi computer with a motor controller is ultimately equivalent to the feeder's electronics. It accepts 5V as its power input so it can drive the motor at that voltage through the motor controller. Its logic is at 3.3V so it's able to read the switch the same way.
 
-The Pi has the advantage of being a computer able to run Python and a web server. It can also connect to the internet by wifi. Other add-ons are possible, like a camera, a speaker and a sensor for detecting pellet levels in the reservoir.
-
 ### Tools and hardware
 
-I used a [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/), which is the cheapest in-stock board I could find. A Pico W would also work, but it's just so much easier (and fun) to use a full Linux machine.
+I used a [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/), the cheapest in-stock board I could find. A Pico W would also work, but it's just so much easier (and fun) to use a full Linux machine.
 
-Note: the Raspberry Pi Zero product line does not have a protective fuse, so make sure to give it 5V only. I have fried a Pi Zero by using a fast-charging phone charger, the kind that can go to 12V. I am not sure why the fast-charge mode activated, so I have stuck to regular 5V chargers since.
+![A comparison of Raspberry Pi](./pi_comparison.jpg)
 
-I use the [Pi Motor Controller HAT](https://www.pishop.ca/product/raspberry-pi-motor-controller-hat/) to control the motor from the Pi. The hat is simply a motor control chip that connect to some of the Pi's pins. Any other motor controller should work. Only one channel is neeeded. The ability to supply a separate 5V voltage is necessary since the motor runs at 5V not the 3.3V of the Pi's GPIO.
+Note: the Raspberry Pi Zero product line does not have a protective fuse, so make sure to give it 5V only. I've fried a Pi Zero by plugging it to a fast-charging phone charger, the kind that can go to 12V. I'm not sure why the fast-charge mode activated, so I've stuck to regular 5V chargers ever since.
+
+I use the [Pi Motor Controller HAT](https://www.pishop.ca/product/raspberry-pi-motor-controller-hat/) to control the motor from the Pi. The hat is just a motor control chip that connect to some of the Pi's pins. Any other motor controller should work. Only one channel is needed because the single motor only ever goes forward. The ability to supply a separate 5V voltage is necessary since the motor runs at 5V not the 3.3V of the Pi's GPIO. In our case, the feeder already has 5V, so we just use that.
+
+Note: only power a motor from the Pi's 5V pins. These are the raw power source. Powering it from different pins will probably cook your Pi.
 
 ![Photo of motor pi and Pi Zero 2W](./images/motor_and_pi.jpg)
 
-La piece de resistance is my dupont connector kit and crimper. This has made everything very easy. With the kit, I was simply able to cut the feeder's wires, put dupont connectors on their ends, and plug them wherever I needed. I use both male and female connectors. Male connectors will fit in breadboards and screw terminals, and female connectors are needed for the Pi. It's a good idea to have an assortment of pre-made Dupont connectors, male-male, male-female, female-female, in case you need to extend a connection or change its connector. A hot glue gun and a Raspberry Pi spacer kit are also helpful for securing components in place.
+La pièce de résistance is my Dupont connector kit and crimper. This has made everything very easy. With the kit, I could just cut the feeder's wires, put Dupont connectors on the ends, and plug them wherever I wanted. I use both male and female connectors. Male connectors will plug in breadboards and screw terminals, and female sockets are needed for the Pi's GPIO pins. It's a good idea to have an assortment of pre-made Dupont connectors too, in all the colours of the rainbow so you can tell what's what.
+
+A hot glue gun and a Raspberry Pi spacer kit are helpful too for securing components in place.
 
 ![Photo collage of crimper tool with kit, hot glue gun, spacers, extra Dupont wires](./images/extra_tools.jpg)
 
-Last but not least, it's a really good idea to have a multimeter so that you can check your feeder's circuitry. This is my first hardware hack, and it's a pretty basic one; nevertheless, I think it's a good idea to check and write yourself some notes on paper. The manufacturer may designed things in a way you do not expect. Different connectors for your multimeter are helpful: alligator clips and "EZ" clips should be able to latch onto most things.
+It's a really good idea to have a multimeter so that you can check your feeder's circuitry. This is my first hardware hack, and it's a pretty basic one; nevertheless, I think it's a good idea to check and write yourself some notes too. The manufacturer may designed things in a way you don't expect. Different connectors for your multimeter are helpful: alligator clips and "EZ" clips should be able to latch onto most things.
 
-Anoter helpful thing to have is a camera so that you can take photos of the feeder's assembly, in case you forget how to put it all back together.
+Another helpful thing to have is a camera so that you can take photos of the feeder's teardown, in case you forget how to put it all back together. It's also really good to have a record of what the dispenser looked like when it was operating, in case you destroy it. For example, it's easy to have the motor running in the wrong direction. Keeping a video will help prevent that.
 
 ### Taking it apart
 
 Most pieces of the feeder come apart easily.
 
-Separating the motor's drum structure was harder. At first I thought it was held by plastic clips, but no mater how hard I tried, I could not pry it loose. I then wondered if the things were held by screws after all. It turned out they were hidden under the feeder's rubber pad or feet. By ripping these off I was able to remove four screws and the feeder came apart.
+Separating the motor's drum structure was a challenge. At first I thought it was held by plastic clips, but no matter how hard I tried, I could not pry it loose. I then wondered if the things were held by screws after all. It turned out they were hidden under the feeder's rubber pad or feet. By ripping these off I could remove the four screws and the feeder came apart. So, be patient and check around before your tear down turns into a literal tearing apart of plastic.
 
 ![Photo of inside the automatic feeder](./images/feeder_inside.jpg)
 
@@ -119,42 +125,42 @@ Inside, wires are soldered to terminals, and there is what looks like a JST head
 
 There is a white wire heading from the 3 D batteries to the board.
 
-There are pairs of wires each going to the motor and to the lever switch. The motor's rotating structure has corners that press on the switch three times during each complete revolution.
+There are pairs of wires each going to the motor and to the lever switch. The motor's rotating structure has corners that press on the switch three times during each complete spin.
 
-To take this apart, I simply cut all the wires at about midpoint. This left me with
+To take this apart, I just cut all the wires at about midpoint. This left me with
 
-  * a disconnected main board.
-  * VCC and ground
-  * positive and negative for the motor
-  * ground for the switch and a blue wire for the returning signal
+  * disconnected main board.
+  * red voltage and black ground
+  * yellow positive and grey negative for the motor
+  * black ground for the switch's input and blue wire for the returning signal
 
-I terminated all the wire ends with Dupont connectors. It didn't really matter whether they were male or female connectors. I have plenty of either kind to connect them.
+I finished all the cut wire ends with Dupont connectors. This way I can easily rewire the feeder back to its original state. It didn't really matter whether they were male or female connectors. I've plenty of either kind to connect them.
 
 ### Putting together the new board
 
-Putting together the new Raspberry Pi setup is not hard provided you have the parts. We just need to control the motor and read the switch to determine the motor's position.
+Putting together the new Raspberry Pi setup is not hard if you have the parts. We just need to control the motor and read the switch to determine the motor's position.
 
-Before that we need to power things. The power supply can be connected to the Pi's 5V and ground pins. On the Pi Zero, these pins are connected to the Pi's power rails, so they're okay to use this way. If this isn't to your liking, I see two alternatives: first, run a 5V power supply with the right connector for your Pi through the back of the feeder, or second wire your own power connector to the VCC and GND in the feeder. You can find USB breakboard boards for micro USB and USB-C to make your life easier.
+Before that we need to power things. The power supply can be connected to the Pi's 5V and ground pins. On the Pi Zero, these pins are connected to the Pi's power rails, so they're okay to use this way. If this isn't to your liking, I see two alternatives. One: run a 5V power supply with the right connector for your Pi through a hole the back of the feeder case. Two: wire your own USB power connector to the voltage and ground in the feeder. You can find USB breakout boards for [micro-B USB](https://www.sparkfun.com/products/10031) and [USB-C](https://www.sparkfun.com/products/23055) to make your life easier.
 
-The motor can be connected to a Motor Pi Hat. Put the hat on the Pi, secure the motor's wires into the screw terminal, and feed 5V into the controller's external voltage.
+The motor can be connected to a Motor Pi Hat. Put the hat on the Pi, secure the motor's wires into the screw terminal, and feed 5V into the controller's own power.
 
 ![Photo and diagram of switch connection to the Pi](./images/switch_circuit.png)
 
-The switch in the feeder drives its output to ground when pressed, so you will need to drive your Pi's digital input pin high to 3.3V volt with a pull-up resistor (I use 4.7kohm). What this all means is that when the switch is not pressed, your Pi will read ON or HIGH at 3.3V. When the switch is pressed, its connection to ground will drive your input pin to ground along with it: this is thanks to the pull-up resistor that will "weaken" the 3.3V so that the ground signal can easily overwhelm it.
+The switch in the feeder drives its output to ground when pressed, so you'll need to drive your Pi's digital input pin high to 3.3V volt with a pull-up resistor (I use 4.7kohm). What this all means is that when the switch is not pressed, your Pi will read ON or HIGH at 3.3V. When the switch is pressed, the connection to ground will drive your input pin to OFF or LOW along with it: this is thanks to the pull-up resistor that will "weaken" the 3.3V so that the ground signal can easily overwhelm it.
 
-There is an extra wrinkle though: the switch will be noisy, meaning that it will bounce around HIGH and LOW as it switches (or just when it feels like it). This means that it will be hard to detect what the switch is really doing. The noise can be reduced with a 104 ceramic capacitor accross the the input pin and the ground (one leg of the capacitor on the digital pin, the other leg on the ground). The capacitor will even out the power fluctuations. Still, it's worth making your Python code wait a few cycles to make sure a change between HIGH/LOW is genuine.
+There's an extra wrinkle though: the switch will be noisy, meaning that it'll bounce around HIGH and LOW as it switches (or just when it feels like it). This means that it'll be hard to detect what the switch is really doing. The noise can be reduced with a 0.1 uF ceramic capacitor accross the the input pin and the ground (one leg of the capacitor on the digital pin, the other leg on the ground). The capacitor will even out the power fluctuations. Still, it's worth making your Python code wait a few cycles to make sure a change between HIGH and LOW is genuine, which I show later.
 
-(I have never been good at diagnosing these noise issues in the past. To do a better job I would need an oscilloscope to measure the fluctuations' frequencies. That would let me select the right capacitor to filter. A multimeter does not update nearly fast enough to get the shape of the noise from the switch. Oscilloscopes takes measurements more than a million times per second and graph them for you.)
+(I've never been good at diagnosing these noise issues. To do a better job I'd need an oscilloscope to measure the fluctuations' frequencies. That would let me select the right capacitor to filter it. A multimeter doesn't update nearly fast enough to get the frequency of the noise from the switch. Oscilloscopes take measurements more than a million times per second and graph them for you. That's what you need to do a nice clean job.)
 
 ### Software strategy
 
-To control the Kibbot I use a very simple Flask server. This puts the the Kibbot on the LAN, and if you have a VPN configured, it also opens up remote control.
+To control the Kibbot I use a very simple Flask server. This puts the the Kibbot on the LAN, and if you have a VPN configured, it also opens it up to distant remote control.
 
-Flask is a simple web server. When a visitor requests a URL, the server runs the appropriate Python code. If the user requests a URL or path that does not exist, the server returns an error. So Flask creates a website with some Python code living inside.
+Flask is a simple web server. When a visitor requests a URL, the server runs the appropriate Python code. If the user requests a URL or path that does not exist, the server returns an error. So Flask creates a website with some Python code living inside, and you can make it do all sorts of things.
 
-The Kibbot simply needs to have a page with a link to dispense food. When the visitor clicks the link, the bot dispenses one portion of food. On the server, Python accesses the Raspberry Pi's GPIO pins. These pins are connected to the motor and the switch, so Python can drive the motor and stop it when necessary.
+The Kibbot simply needs to have a page with a link to dispense food. When the visitor clicks the link, the bot dispenses a portion. On the server, Python accesses the Raspberry Pi's GPIO pins. These pins are connected to the motor and the switch, so Python can drive the motor and stop it when done.
 
-Controlling the motor is not difficult, thanks to the Motor Pi Hat. The board's GitHub repo has [an example](https://github.com/modmypi/SN754410NE-Motor-Controller/blob/master/pwm_motor.py) you can quickly adapt and use. The RPi.GPIO library already has all it needs, and no additional libraries are necessary. Once the pins are assigned, the code can set the motor's speed. When it's time to stop, the `.stop()` method is called.
+Controlling the motor is not difficult, thanks to the Motor Pi Hat. The board's GitHub repo has [an example](https://github.com/modmypi/SN754410NE-Motor-Controller/blob/master/pwm_motor.py) you can easily adapt and use. The RPi.GPIO library already has all it needs, and no extra libraries are necessary. Once the pins are assigned, the code can set the motor's speed. When it's time to stop, the `.stop()` method is called.
 
 ```python
 # Make it so GPIO pins by their system number, not their position. The two sets
@@ -176,9 +182,9 @@ m1f.start(80)
 m1f.stop()
 ```
 
-Reading the switch is not difficult, but making use of the signal requires a bit of work.
+Reading the switch isn't difficult, but making use of the signal requires a bit of work.
 
-First, we're interested in the falling edge of the switch's signal, meaning that we want to know when the switch goes from HIGH (unpressed) to LOW (pressed). (Recall that the switch is connected to ground so that it drives the input pin low when pressed.) To do this, we need a while loop that compares the signal from the previous loop.
+First, we're interested in the falling edge of the switch's signal, meaning that we want to know when the switch goes from HIGH (unpressed) to LOW (pressed). (Remember that the switch is connected to ground so that it drives the signal low when pressed.) We need a while loop that compares the current signal against the one from the previous loop.
 
 ```python
 # Create some variables for tracking the switch in the while loop. When the
@@ -203,7 +209,7 @@ while True:
   old_switch = new_switch
 ```
 
-Second, the signal is noisy despite the capacitor. It will bounce between HIGH and LOW as the switch is pressed. While it might be possible to clean up the signal more with better tools, there is a cheap solution. The code can wait to see if the signal stays high after it detects the rising edge. This introduces a delay but it's fairly reliable.
+Second, the signal is noisy despite the capacitor. It'll bounce between HIGH and LOW as the switch is pressed. While it might be possible to clean up the signal more, there's a cheap solution. The code can wait to see if the signal stays LOW for 1,000 cycles after it detects the falling edge. This creates a tiny delay before the motor stops but it's fairly reliable.
 
 ```python
 while True:
@@ -224,11 +230,11 @@ while True:
       break
 ```
 
-With these two things together, the operation of the motor and the switch to stop it, the web server can dispense portions of food when the link is clicked.
+With these two things together, the motor control and the switch logic, the web server can dispense portions of food when the link is clicked.
 
 There are two other things to do: include a log and protect against accidental feedings.
 
-A log is easily made by saving the time of each request to a comma-separated values (CSV) file. This kind of file is very simple, and can be written to directly without much trouble. When the page is displayed, the file is read, parsed and sorted to give the past history. This way you have some idea how often you are feeding your cats.
+A log is easily made by saving the time of each request to a comma-separated values file (or CSV). This kind of file is very simple and can be written to without much trouble. When the webpage is displayed, the file is read, parsed and sorted to give the history log. This way you have some idea how often you're feeding your cats.
 
 ```python
 # During a feeding, save this in our logs
@@ -243,7 +249,7 @@ if os.path.isfile("./log.csv"):
         feedings = sorted(feedings)
 ```
 
-Protecting against accidental feedings can be done a few ways. One way is to make the links expire after a short amount of time. In our case, we can just put a timestamp at the end of each link and check that the timestamp is recent when evaluating the request. If a request uses a timestamp that is too old, the request fails. The `datetime` standard library makes this easy with its time deltas, [particularly their ability to divide each other](https://docs.python.org/3/library/datetime.html#datetime.timedelta.total_seconds). By subtracting the timestamp from the current time, we get a delta we can divide by `timedelta(minutes=1)` to get the minutes elapsed. If the result is great than 1, return an error.
+You can protect against accidental feedings a few ways. You can make the links expire after a short amount of time. In our case, we can just put a timestamp at the end of each link and check that the timestamp is recent when the request is received. If a request uses a timestamp that's too old, the request fails. The `datetime` standard library makes this easy with its time deltas, [particularly their ability to divide each other](https://docs.python.org/3/library/datetime.html#datetime.timedelta.total_seconds). By subtracting the timestamp from the current time, we get a delta we can divide by `timedelta(minutes=1)` to get the difference in minutes. If the result is greater than 1, return an error and give no kibs.
 
 ```python
 @app.route("/kib/<int:today>")
@@ -254,11 +260,11 @@ def kib(today):
       return "Invalid kibble request", 400
 ```
 
-Another way is to use the `flask-limiter` library to limit how many times a route can be used.
+Another way is to use the [`flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/) library to limit how frequently a route can be used.
 
 ### A systemd service
 
-It is very convenient to have the Flask server start automatically whenever the Kibbot is pluged in. This can be done with a systemd service that starts the server as Linux starts. This means you don't have to SSH into the Kibbot each time you want to start it.
+It's very convenient to have the Flask server start automatically whenever the Kibbot is plugged in. You can do this with a systemd service that starts the server when Linux starts. This means you don't have to SSH into the Kibbot each time you want to start it.
 
 You can find a good guide [here](https://github.com/torfsen/python-systemd-tutorial) for turning a Python script into a systemd service.
 
@@ -279,14 +285,14 @@ Restart=on-failure
 WantedBy=default.target
 ```
 
-Then run to start
+Then run these commands to start it
 
 ```
 systemctl --user enable kibbot
 systemctl --user start kibbot
 ```
 
-You should also run this to let the service continue even when you aren't logged in
+You also have to run this command to let the service continue even when you aren't logged in
 
 ```
 sudo loginctl enable-linger $USER
@@ -294,7 +300,7 @@ sudo loginctl enable-linger $USER
 
 ### A bash script for remote trigger
 
-You can access the flask server from outside a browser. A bash script can make the GET request to trigger the feeding.
+You can access the flask server from something other than a web browser. A bash script can make the GET request to trigger the feeding.
 
 ```bash
 #!/bin/bash
@@ -303,8 +309,14 @@ page=$(date +%Y%m%d%H%M%S)
 wget -O- http://192.168.xxx.xxx:5000/kib/${page}
 ```
 
-The above script can be used in motioneye to [add an action button](https://github.com/motioneye-project/motioneye/wiki/Action-Buttons) to start a feeding. Since this technique generates the timestamp from the remote machine's time, it may be too far off from the Kibbot's and always cause a failure.
+The above script can be used in Motioneye to [add an action button](https://github.com/motioneye-project/motioneye/wiki/Action-Buttons) to start a feeding. You can feed your cats while spying on them. Since this technique generates the timestamp from the remote machine's time, it may be too far off from the Kibbot's and could always return a failure.
+
+### Final thoughts
+
+The Pi can do a whole lot of other things. You could add a camera, a speaker, or maybe a water fountain to your automatic feeder. With some wheels it would have extra mobility to run away from your cats. You know, for a bit of exercise.
 
 ## Questions? Comments?
 
 If you have any questions or comments, feel free to reach out to me.
+
+Hope you enjoyed this!
