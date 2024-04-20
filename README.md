@@ -2,27 +2,31 @@
 
 ## Your cats' best friend
 
-The Kib Bot is a Raspberry Pi tapped into a pet food dispenser. The Raspberry Pi computer controls the feeder's motor to dispense food for your pets.
+The Kib Bot is a Raspberry Pi that's been wired into an automatic pet food dispenser. The Pi gives you control of the feeder's motor, so you can decide when you give kibble.
 
 ![Inside of food dispenser](./images/inside_pi.jpg)
 
-Rewiring your feeder gives a whole more lot control over it. Connecting it to the internet is now easy, and you can do it your way, without the need for an app. For example, you can connect the feeder to a VPN and integrate it into your home surveillance to give kibs when you're out of the house.
+The python code gives you a simple web interface that has a button that gives food when you click it.
+
+![Web interface](./images/web_interface.jpg)
+
+Setting up your feeder this way gives you a whole more lot control over it. It's not easy to connect it to the internet, and you don't have to use an app that comes from the manufacturer. You can do more complicated stuff with it. For example, you can connect the feeder to a VPN and your home surveillance system, so that you can see if the cats are hungry before feeding them.
 
 ![Photo of two cats both trying to eat from the automatic feeder](./images/cat_crowd.jpg)
 
-... better get two ...
+... the feeder might be *very* popular ...
 
-If you like cats and you're looking for a nice and easy hardware hacking, try out the Kibbot!
+If you like cats and you're looking for a nice and easy hardware hacking project, give the Kibbot a try!
 
 ## How difficult is this project?
 
 I think it's a pretty forgiving project, but you'll need to push yourself a bit if you're new to electronics.
 
-What makes this project easy is that an automatic feeder is a relatively simple machine. It's just a spinning motor. And luckily, spinning motors is something fairly well supported in hobbyist electronics. You can order all the parts you need.
+What makes this project easy is that an automatic feeder is a simple machine. It's just a motor in a plastic housing. And luckily, motors are something very well supported in hobbyist electronics. You can order all of the parts online.
 
-What makes this hard is that it will cost you $100 in parts, some of which you will destroy to improve. If you make a mistake, your stuff turns into junk. That feels wasteful. If your automatic feeder is different from mine, you'll have to figure it out yourself, and that can be tricky.
+But what makes this hard is that it'll cost you about $100 in parts, some of which you will destroy to improve. That can be hard to do. And if you make a mistake, you can break things permanently. That feels wasteful. Also if your automatic feeder is different from mine, you'll have to figure it out yourself, and that can be tricky.
 
-What can make this all easier is having the right tools. I found that having a Dupont connector crimper meant that I didn't need to do soldering. Not having to do soldering is great because it's not for everyone and besides the equipment is at least $100. A crimper and a Dupont connector kit is only about $50.
+You can make this all easier by having the right tools. I found that having a Dupont connector crimper meant that I didn't need to do soldering. Not having to do soldering is great because it's not for everyone and besides the equipment is at least $100. A crimper and a Dupont connector kit is only about $50.
 
 So, I think making the Kibbot is a good beginner hardware hacking project.
 
@@ -40,7 +44,7 @@ For parts
   * A variety of premade Dupont wires, to extend or repair connections
   * A collections of spacers for the Raspberry Pi, to secure it
 
-For the automatic feeder, you just need its plastic structure with motor and such. You'll be bypassing its control interface, so anything fancy you won't use.
+For the automatic feeder, you just need a basic model with a plastic structure, a motor and such. You'll be bypassing its built-in controls, so anything fancy you won't actually use.
 
 As for tools
 
@@ -52,7 +56,7 @@ As for tools
 
 ## Installation
 
-#### Software
+### Software
 
 The code is set up as a Flask app.
 
