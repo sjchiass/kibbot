@@ -2,35 +2,55 @@
 
 ## Your cats' best friend
 
-The Kib Bot is a Raspberry Pi tapped into a pet food dispenser. It lets you operate the feeder remotely. It can be modified to do custom stuff, like logging and protecting against accidental feedings.
+The Kib Bot is a Raspberry Pi tapped into a pet food dispenser. The Raspberry Pi computer controls the feeder's motor to dispense food for your pets.
 
 ![Inside of food dispenser](./images/inside_pi.jpg)
 
-For extra fun, connect your Kib Bot to your VPN and use it away from home! Your cats will love it!
+Rewiring your feeder gives a whole more lot control over it. Connecting it to the internet is now easy, and you can do it your way, without the need for an app. For example, you can connect the feeder to a VPN and integrate it into your home surveillance to give kibs when you're out of the house.
 
 ![Photo of two cats both trying to eat from the automatic feeder](./images/cat_crowd.jpg)
 
 ... better get two ...
 
-### Requirements
+If you like cats and you're looking for a nice and easy hardware hacking, try out the Kibbot!
 
-This code will run off of a Raspberry Pi single-board computer. You'll also need some kind of pet food dispenser, one that you've modified to connect to the Raspberry Pi.
+## How difficult is this project?
 
-The code uses RPi.GPIO through a motor controller. It could be run on a different machine as long as it's able to control a motor and connect to the internet. The internet connection is what really makes this fun.
+I think it's a pretty forgiving project, but you'll need to push yourself a bit if you're new to electronics.
 
-The code also needs to be able to read a pin, assuming your food dispenser uses a switch to detect the motor's position. Any Raspberry Pi or microcontroller can do this.
+What makes this project easy is that an automatic feeder is a relatively simple machine. It's just a spinning motor. And luckily, spinning motors is something fairly well supported in hobbyist electronics. You can order all the parts you need.
 
-### Installation
+What makes this hard is that it will cost you $100 in parts, some of which you will destroy to improve. If you make a mistake, your stuff turns into junk. That feels wasteful. If your automatic feeder is different from mine, you'll have to figure it out yourself, and that can be tricky.
 
-#### Hardware
+What can make this all easier is having the right tools. I found that having a Dupont connector crimper meant that I didn't need to do soldering. Not having to do soldering is great because it's not for everyone and besides the equipment is at least $100. A crimper and a Dupont connector kit is only about $50.
 
-I used a [Yoposl automatic cat feeder](https://www.amazon.ca/Yuposl-Automatic-Cat-Feeders-Dispenser/dp/B0C2JBBQKR?th=1) I bought off of Amazon. It was a lot simpler for me to buy something off the shelf and modify it than to build it from scratch. I'm even less a mechanical engineer than I'm an electronics engineer, and I'm not even an electronics engineer!
+So, I think making the Kibbot is a good beginner hardware hacking project.
 
-![Photo of the automatic feeder](./images/feeder.jpg)
+## Shopping list
 
-Place the Motor HAT on your Raspberry Pi. These "hats" are made to stack one on top of the other, so they're easy to use.
+Here's what I used.
 
-Connect the switch to BCM pin 16. Make sure that the switch drives the voltage low when engaged. I feed pin 16 3.3V through a 4.7k ohm resistor. Check with a multimeter what your pet feeder is doing. You might have to tap into its wiring differently to get the switch signal.
+For parts
+
+  * A [Yoposl automatic cat feeder](https://www.amazon.ca/Yuposl-Automatic-Cat-Feeders-Dispenser/dp/B0C2JBBQKR?th=1)
+  * A Raspberry Pi Zero 2 W (you will need a micro SD card too)
+  * A Raspberry Pi Motor Controller HAT
+  * A miniature breadboard
+  * A Dupont connector kit
+  * A variety of premade Dupont wires, to extend or repair connections
+  * A collections of spacers for the Raspberry Pi, to secure it
+
+For the automatic feeder, you just need its plastic structure with motor and such. You'll be bypassing its control interface, so anything fancy you won't use.
+
+As for tools
+
+  * A multimeter
+  * A Dupont connector crimper
+  * A hot glue gun
+  * Screwdrivers (my automatic feeder needs a very long Phillips screwdriver to reach deep screws)
+
+
+## Installation
 
 #### Software
 
@@ -42,7 +62,7 @@ On a Raspberry Pi, you'll have to install some software first, pip, venv and git
 apt install python3-pip python3-venv git
 ```
 
-Then, clone this code in a folder with `git clone`. You can then setup the virtual environment and installed the packages in the requirements file.
+Then, clone this code in a folder with `git clone`. You can then setup the virtual environment and install the packages in the requirements file.
 
 ```
 cd kibbot
@@ -142,7 +162,7 @@ Putting together the new Raspberry Pi setup is not hard if you have the parts. W
 
 Before that we need to power things. The power supply can be connected to the Pi's 5V and ground pins. On the Pi Zero, these pins are connected to the Pi's power rails, so they're okay to use this way. If this isn't to your liking, I see two alternatives. One: run a 5V power supply with the right connector for your Pi through a hole the back of the feeder case. Two: wire your own USB power connector to the voltage and ground in the feeder. You can find USB breakout boards for [micro-B USB](https://www.sparkfun.com/products/10031) and [USB-C](https://www.sparkfun.com/products/23055) to make your life easier.
 
-The motor can be connected to a Motor Pi Hat. Put the hat on the Pi, secure the motor's wires into the screw terminal, and feed 5V into the controller's own power.
+The motor can be connected to a Motor Pi Hat. Put the hat on the Pi, secure the motor's wires into the screw terminal, and feed 5V into the controller's own power. These "hats" are made to stack one on top of the other, so they're easy to use.
 
 ![Photo and diagram of switch connection to the Pi](./images/switch_circuit.png)
 
@@ -154,7 +174,9 @@ There's an extra wrinkle though: the switch will be noisy, meaning that it'll bo
 
 ### Software strategy
 
-To control the Kibbot I use a very simple Flask server. This puts the the Kibbot on the LAN, and if you have a VPN configured, it also opens it up to distant remote control.
+I'll explain how the software works to control the Kibbot.
+
+I use a very simple Flask server. This puts the the Kibbot on the LAN, and if you have a VPN configured, it also opens it up to distant remote control.
 
 Flask is a simple web server. When a visitor requests a URL, the server runs the appropriate Python code. If the user requests a URL or path that does not exist, the server returns an error. So Flask creates a website with some Python code living inside, and you can make it do all sorts of things.
 
@@ -261,6 +283,75 @@ def kib(today):
 ```
 
 Another way is to use the [`flask-limiter`](https://flask-limiter.readthedocs.io/en/stable/) library to limit how frequently a route can be used.
+
+### Installing the software
+
+To install the software on your Raspberry Pi, you'll need to SSH into it so that you can control it. The Raspberry Pi webiste has [a guide](https://www.raspberrypi.com/documentation/computers/remote-access.html) to show you how to do this.
+
+Once you're in control of the Raspberry Pi, start by installing some system dependencies. Git is needed to download the code to your computer. Pip and venv are there to intall and manage your Python packages.
+
+```
+apt install git python3-pip python3-venv
+```
+
+Then, clone this code in a folder with `git clone`.
+
+```console
+
+```
+
+You can then setup the virtual environment and install the packages in the requirements file.
+
+```
+cd kibbot
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+```
+
+To start the web server in development mode,
+
+```
+. .venv/bin/activate
+flask --app kibbot run --host=0.0.0.0
+```
+
+To run using a better server, use
+
+```
+. .venv/bin/activate
+gunicorn -w 1 -b 0.0.0.0:5000 kibbot:app
+```
+
+## Extras
+
+### VPN
+
+A VPN lets you connect to the kibbot away from home. Normally you can only connect to it from your home LAN, but with a VPN, you're not constrained by that.
+
+These days privacy VPNs are very popular. They let you mask your internet connect. The kind of VPN I'm talking about is different. It's like a company VPN you use to connect to the office at home.  It's the kind of VPN that lets you be somewhere else.
+
+I use Tailscale. It's free and encrypted using Wireguard. The only set up necessary is installing taiscale on your Kibbot and your remote control computer.
+
+First, create an account and install it on your computer. This will give you a dashboard for controlling your VPNs' other devices. You can install tailscale on your phone too.
+
+For the Raspberry Pi, you can find the [latest instructions](https://tailscale.com/download/linux/rpi-bullseye) on their website.
+
+```console
+sudo apt-get install apt-transport-https
+
+curl -fsSL https://pkgs.tailscale.com/stable/raspbian/bullseye.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg > /dev/null
+curl -fsSL https://pkgs.tailscale.com/stable/raspbian/bullseye.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+
+sudo apt-get update
+sudo apt-get install tailscale
+
+sudo tailscale up
+
+tailscale ip -4
+```
+
+You can keep the Kibbot's tailscale IP address in your favourites and access it that way. 
 
 ### A systemd service
 
