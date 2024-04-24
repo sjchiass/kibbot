@@ -6,11 +6,11 @@ The Kib Bot is a Raspberry Pi that's been wired into an automatic pet food dispe
 
 ![Inside of food dispenser](./images/inside_pi.jpg)
 
-The python code gives you a simple web interface that has a button that gives food when you click it.
+The python code gives you a simple web interface that has a hyperlink that gives food when you click it.
 
-![Web interface](./images/web_interface.jpg)
+![Web interface](./images/web_interface.png)
 
-Setting up your feeder this way gives you a whole more lot control over it. It's not easy to connect it to the internet, and you don't have to use an app that comes from the manufacturer. You can do more complicated stuff with it. For example, you can connect the feeder to a VPN and your home surveillance system, so that you can see if the cats are hungry before feeding them.
+Setting up your feeder this way gives you a whole more lot control over it. It's now easy to connect it to the internet, and you don't have to use an app that comes from the manufacturer. You can do more complicated stuff with it. For example, you can connect the feeder to a VPN and your home surveillance system, so that you can see if the cats are hungry before feeding them.
 
 ![Photo of two cats both trying to eat from the automatic feeder](./images/cat_crowd.jpg)
 
