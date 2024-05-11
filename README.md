@@ -63,10 +63,14 @@ The code is set up as a Flask app.
 On a Raspberry Pi, you'll have to install some software first, pip, venv and git
 
 ```
-apt install python3-pip python3-venv git
+sudo apt install python3-pip python3-venv git
 ```
 
 Then, clone this code in a folder with `git clone`. You can then setup the virtual environment and install the packages in the requirements file.
+
+```
+git clone https://github.com/sjchiass/kibbot.git
+```
 
 ```
 cd kibbot
